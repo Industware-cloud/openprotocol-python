@@ -1,0 +1,42 @@
+[build-system]
+requires = ["setuptools>=61.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "openprotocol"
+version = "0.1.0"
+description = "Python library for Open Protocol communication (e.g., tightening systems)"
+readme = "README.md"
+requires-python = ">=3.9"
+license = { text = "MIT" }
+authors = [
+  { name = "Industware s.r.o, 2025", email = "info@industware.cloud" }
+]
+dependencies = ["setuptools (>=61.0)", "wheel (>=0.45.1,<0.46.0)"]
+
+[project.urls]
+Homepage = "https://github.com/yourname/openprotocol-python"
+Repository = "https://github.com/yourname/openprotocol-python"
+Issues = "https://github.com/yourname/openprotocol-python/issues"
+
+[tool.setuptools.packages.find]
+where = ["openprotocol"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+
+[tool.poetry.group.dev.dependencies]
+pytest = "^8.2.0"
+black = "^24.4.2"
+flake8 = "^7.1.0"
+mypy = "^1.10.0"
+
+# Poetry compatibility section
+[tool.poetry]
+name = "openprotocol"
+version = "0.1.0"
+description = "Python library for Open Protocol communication (e.g., tightening systems)"
+authors = ["Tomas Krcka <info@industware.cloud>"]
+license = "MIT"
+readme = "README.md"
+packages = [{ include = "openprotocol" }]
