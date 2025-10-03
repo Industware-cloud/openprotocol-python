@@ -1,4 +1,4 @@
-class OpenProtocolMessage:
+class OpenProtocolRawMessage:
     """
     Internal representation of a decoded Open Protocol frame.
     Handles parsing of header and payload according to spec.
@@ -32,7 +32,7 @@ class OpenProtocolMessage:
         self._message_part_number = message_part_number
 
     @classmethod
-    def decode(cls, raw: bytes) -> "OpenProtocolMessage":
+    def decode(cls, raw: bytes) -> "OpenProtocolRawMessage":
         """Decode raw bytes (with length prefix) into header + payload."""
         raw_str = raw.decode("ascii")
         frame_len = int(raw_str[0:4])

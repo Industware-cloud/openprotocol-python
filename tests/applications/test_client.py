@@ -2,7 +2,7 @@ import pytest
 from unittest.mock import AsyncMock
 
 from openprotocol.applications.client import OpenProtocolClient
-from openprotocol.core.message import OpenProtocolMessage
+from openprotocol.core.message import OpenProtocolRawMessage
 from openprotocol.core.mid_base import OpenProtocolMid, MidCodec
 
 
@@ -14,10 +14,10 @@ class DummyMidRecv(OpenProtocolMid):
         self.payload = payload
 
     @classmethod
-    def from_message(cls, msg: OpenProtocolMessage):
+    def from_message(cls, msg: OpenProtocolRawMessage):
         return cls(msg.payload)
 
-    def encode(self) -> OpenProtocolMessage:
+    def encode(self) -> OpenProtocolRawMessage:
         return self.create_message(self.payload)
 
 
@@ -30,10 +30,10 @@ class DummyMidSend(OpenProtocolMid):
         self.expected_response_mid.add(DummyMidRecv.MID)
 
     @classmethod
-    def from_message(cls, msg: OpenProtocolMessage):
+    def from_message(cls, msg: OpenProtocolRawMessage):
         return cls(msg.payload)
 
-    def encode(self) -> OpenProtocolMessage:
+    def encode(self) -> OpenProtocolRawMessage:
         return self.create_message(self.payload)
 
 

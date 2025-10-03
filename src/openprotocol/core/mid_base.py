@@ -1,7 +1,7 @@
 from abc import abstractmethod, ABC
 from typing import Type
 
-from openprotocol.core.message import OpenProtocolMessage
+from openprotocol.core.message import OpenProtocolRawMessage
 
 
 class OpenProtocolMid(ABC):
@@ -17,17 +17,17 @@ class OpenProtocolMid(ABC):
         if cls.MID is not None and cls.REVISION is not None:
             MidCodec.register(cls.MID, cls.REVISION, cls)
 
-    def create_message(self, payload: str) -> OpenProtocolMessage:
-        return OpenProtocolMessage(self.MID, self.REVISION, payload)
+    def create_message(self, payload: str) -> OpenProtocolRawMessage:
+        return OpenProtocolRawMessage(self.MID, self.REVISION, payload)
 
     @abstractmethod
-    def encode(self) -> OpenProtocolMessage:
+    def encode(self) -> OpenProtocolRawMessage:
         """Encode the MID into an OpenProtocolMessage."""
         pass
 
     @classmethod
     @abstractmethod
-    def from_message(cls, msg: OpenProtocolMessage) -> "OpenProtocolMid":
+    def from_message(cls, msg: OpenProtocolRawMessage) -> "OpenProtocolMid":
         """Create a MID instance from an OpenProtocolMessage."""
         pass
 
@@ -43,7 +43,7 @@ class MidCodec:
 
     @classmethod
     def decode(cls, raw: bytes) -> OpenProtocolMid:
-        msg = OpenProtocolMessage.decode(raw)
+        msg = OpenProtocolRawMessage.decode(raw)
         key = (msg.mid, msg.revision)
         if key in cls._registry:
             return cls._registry[key].from_message(msg)
