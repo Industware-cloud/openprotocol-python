@@ -107,3 +107,7 @@ class OpenProtocolMessage:
     @property
     def revision(self):
         return self._revision
+
+    @property
+    def payload(self):
+        return self._payload
