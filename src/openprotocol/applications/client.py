@@ -1,4 +1,4 @@
-from openprotocol.core.mid_base import OpenProtocolMid, MidCodec
+from openprotocol.core.mid_base import OpenProtocolMessage, MidCodec
 from openprotocol.transport.async_tcp import AsyncTcpClient
 
 
@@ -15,8 +15,8 @@ class OpenProtocolClient:
         await self._transport.connect()
 
     async def send_receive(
-        self, mid_obj: OpenProtocolMid, timeout=5.0
-    ) -> OpenProtocolMid:
+        self, mid_obj: OpenProtocolMessage, timeout=5.0
+    ) -> OpenProtocolMessage:
         raw_frame = MidCodec.encode(mid_obj)
         response_bytes = await self._transport.send_receive(raw_frame, timeout)
         msg_mid = MidCodec.decode(response_bytes)

@@ -3,10 +3,10 @@ from unittest.mock import AsyncMock
 
 from openprotocol.applications.client import OpenProtocolClient
 from openprotocol.core.message import OpenProtocolRawMessage
-from openprotocol.core.mid_base import OpenProtocolMid, MidCodec
+from openprotocol.core.mid_base import OpenProtocolMessage, MidCodec
 
 
-class DummyMidRecv(OpenProtocolMid):
+class DummyMessageRecv(OpenProtocolMessage):
     MID = 9999
     REVISION = 1
 
@@ -21,13 +21,13 @@ class DummyMidRecv(OpenProtocolMid):
         return self.create_message(self.payload)
 
 
-class DummyMidSend(OpenProtocolMid):
+class DummyMessageSend(OpenProtocolMessage):
     MID = 9998
     REVISION = 1
 
     def __init__(self, payload="hello"):
         self.payload = payload
-        self.expected_response_mid.add(DummyMidRecv.MID)
+        self.expected_response_mid.add(DummyMessageRecv.MID)
 
     @classmethod
     def from_message(cls, msg: OpenProtocolRawMessage):
@@ -41,16 +41,18 @@ class DummyMidSend(OpenProtocolMid):
 async def test_send_receive():
     # Mock transport
     mock_transport = AsyncMock()
-    mock_transport.send_receive.return_value = MidCodec.encode(DummyMidRecv("world"))
+    mock_transport.send_receive.return_value = MidCodec.encode(
+        DummyMessageRecv("world")
+    )
 
     # System under test
     client = OpenProtocolClient(mock_transport)
 
     # Act
-    response = await client.send_receive(DummyMidSend("hello"))
+    response = await client.send_receive(DummyMessageSend("hello"))
 
     # Assert
-    assert isinstance(response, DummyMidRecv)
+    assert isinstance(response, DummyMessageRecv)
     assert response.payload == "world"
     mock_transport.send_receive.assert_called_once()
 
@@ -58,10 +60,12 @@ async def test_send_receive():
 @pytest.mark.asyncio
 async def test_send_receive_not_expected_mid():
     mock_transport = AsyncMock()
-    mock_transport.send_receive.return_value = MidCodec.encode(DummyMidRecv("world"))
+    mock_transport.send_receive.return_value = MidCodec.encode(
+        DummyMessageRecv("world")
+    )
 
     client = OpenProtocolClient(mock_transport)
-    dummy_send = DummyMidSend("hello")
+    dummy_send = DummyMessageSend("hello")
     dummy_send.expected_response_mid.clear()
     dummy_send.expected_response_mid.add(1234)
     #
