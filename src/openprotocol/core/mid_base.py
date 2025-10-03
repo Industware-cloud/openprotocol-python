@@ -4,7 +4,7 @@ from typing import Type
 from openprotocol.core.message import OpenProtocolRawMessage
 
 
-class OpenProtocolMid(ABC):
+class OpenProtocolMessage(ABC):
     """Abstract base class for all Open Protocol MID implementations."""
 
     MID: int | None = None
@@ -27,7 +27,7 @@ class OpenProtocolMid(ABC):
 
     @classmethod
     @abstractmethod
-    def from_message(cls, msg: OpenProtocolRawMessage) -> "OpenProtocolMid":
+    def from_message(cls, msg: OpenProtocolRawMessage) -> "OpenProtocolMessage":
         """Create a MID instance from an OpenProtocolMessage."""
         pass
 
@@ -35,14 +35,14 @@ class OpenProtocolMid(ABC):
 class MidCodec:
     LENGTH_FIELD_SIZE = 4  # first 4 chars = frame length
 
-    _registry: dict[tuple[int, int], Type[OpenProtocolMid]] = {}
+    _registry: dict[tuple[int, int], Type[OpenProtocolMessage]] = {}
 
     @classmethod
-    def register(cls, mid: int, rev: int, parser_cls: Type[OpenProtocolMid]):
+    def register(cls, mid: int, rev: int, parser_cls: Type[OpenProtocolMessage]):
         cls._registry[(mid, rev)] = parser_cls
 
     @classmethod
-    def decode(cls, raw: bytes) -> OpenProtocolMid:
+    def decode(cls, raw: bytes) -> OpenProtocolMessage:
         msg = OpenProtocolRawMessage.decode(raw)
         key = (msg.mid, msg.revision)
         if key in cls._registry:
@@ -50,6 +50,6 @@ class MidCodec:
         raise ValueError(f"Not supported mid {msg.mid}")
 
     @classmethod
-    def encode(cls, mid_obj: OpenProtocolMid) -> bytes:
+    def encode(cls, mid_obj: OpenProtocolMessage) -> bytes:
         msg = mid_obj.encode()
         return msg.encode()
