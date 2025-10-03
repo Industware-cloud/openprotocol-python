@@ -1,7 +1,18 @@
 from abc import abstractmethod, ABC
+from enum import Enum, verify, UNIQUE, auto
 from typing import Type
 
 from openprotocol.core.message import OpenProtocolRawMessage
+
+
+@verify(UNIQUE)
+class MessageType(Enum):
+    REQ_MESSAGE = auto()
+    REQ_REPLY_MESSAGE = auto()
+    EVENT_SUBSCRIBE = auto()
+    EVENT = auto()
+    EVENT_ACK = auto()
+    OP_COMMAND = auto()
 
 
 class OpenProtocolMessage(ABC):
@@ -10,10 +21,14 @@ class OpenProtocolMessage(ABC):
     MID: int | None = None
     REVISION: int | None = None
     expected_response_mid: set[int] = set()
+    MESSAGE_TYPE: MessageType | None = None
 
     def __init_subclass__(cls, **kwargs):
         """Auto-register every subclass that defines MID/REVISION."""
         super().__init_subclass__(**kwargs)
+        if cls.MESSAGE_TYPE is None:
+            raise NotImplementedError("MESSAGE_TYPE is not defined")
+
         if cls.MID is not None and cls.REVISION is not None:
             MidCodec.register(cls.MID, cls.REVISION, cls)
 
