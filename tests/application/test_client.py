@@ -1,7 +1,7 @@
 import pytest
 from unittest.mock import AsyncMock
 
-from openprotocol.applications.client import OpenProtocolClient
+from openprotocol.application.client import OpenProtocolClient
 from openprotocol.core.message import OpenProtocolRawMessage
 from openprotocol.core.mid_base import OpenProtocolMessage, MidCodec, MessageType
 
