@@ -1,6 +1,3 @@
-from typing import Optional
-
-
 class OpenProtocolMessage:
     """
     Internal representation of a decoded Open Protocol frame.
@@ -19,9 +16,9 @@ class OpenProtocolMessage:
         no_ack_flag: bool = False,
         station_id: int = 1,
         spindle_id: int = 1,
-        seq_no: Optional[int] = None,
-        no_of_mess_parts: Optional[int] = None,
-        message_part_number: Optional[int] = None,
+        seq_no: int | None = None,
+        no_of_mess_parts: int | None = None,
+        message_part_number: int | None = None,
     ):
         self._mid = mid
         self._revision = revision
