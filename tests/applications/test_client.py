@@ -3,12 +3,13 @@ from unittest.mock import AsyncMock
 
 from openprotocol.applications.client import OpenProtocolClient
 from openprotocol.core.message import OpenProtocolRawMessage
-from openprotocol.core.mid_base import OpenProtocolMessage, MidCodec
+from openprotocol.core.mid_base import OpenProtocolMessage, MidCodec, MessageType
 
 
 class DummyMessageRecv(OpenProtocolMessage):
     MID = 9999
     REVISION = 1
+    MESSAGE_TYPE = MessageType.REQ_REPLY_MESSAGE
 
     def __init__(self, payload="hello"):
         self.payload = payload
@@ -24,6 +25,7 @@ class DummyMessageRecv(OpenProtocolMessage):
 class DummyMessageSend(OpenProtocolMessage):
     MID = 9998
     REVISION = 1
+    MESSAGE_TYPE = MessageType.REQ_MESSAGE
 
     def __init__(self, payload="hello"):
         self.payload = payload
