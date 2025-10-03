@@ -19,20 +19,13 @@ Homepage = "https://github.com/Industware-cloud/openprotocol-python"
 Repository = "https://github.com/Industware-cloud/openprotocol-python"
 Issues = "https://github.com/Industware-cloud/openprotocol-python"
 
-[project.optional-dependencies]
-dev = [
-    "pytest>=8.2.0",
-    "pytest-cov>=5.0.0",
-    "ruff>=0.13.0",
-    "mypy>=1.10.0",
-    "pre-commit>=3.7.0"
-]
-
 [tool.setuptools.packages.find]
 where = ["src"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
+pythonpath = ["src"]
+asyncio_mode = "auto"
 
 # Poetry compatibility section
 [tool.poetry]
@@ -42,3 +35,11 @@ description = "Python library for Open Protocol communication (e.g., tightening 
 authors = ["Tomas Krcka <tomas.krcka@industware.cloud>"]
 license = "MIT"
 packages = [{ include = "src" }]
+
+[tool.poetry.group.dev.dependencies]
+pytest = "^8.2.0"
+pytest-cov = "^5.0.0"
+pytest-asyncio = "^0.23.6"
+ruff = "^0.13.0"
+mypy = "^1.10.0"
+pre-commit = "^3.7.0"
