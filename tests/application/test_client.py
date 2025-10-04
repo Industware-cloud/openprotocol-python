@@ -29,7 +29,7 @@ class DummyMessageSend(OpenProtocolMessage):
 
     def __init__(self, payload="hello"):
         self.payload = payload
-        self.expected_response_mid.add(DummyMessageRecv.MID)
+        self.expected_response_mids.add(DummyMessageRecv.MID)
 
     @classmethod
     def from_message(cls, msg: OpenProtocolRawMessage):
@@ -68,8 +68,8 @@ async def test_send_receive_not_expected_mid():
 
     client = OpenProtocolClient(mock_transport)
     dummy_send = DummyMessageSend("hello")
-    dummy_send.expected_response_mid.clear()
-    dummy_send.expected_response_mid.add(1234)
+    dummy_send.expected_response_mids.clear()
+    dummy_send.expected_response_mids.add(1234)
     #
     with pytest.raises(ValueError):
         await client.send_receive(dummy_send)

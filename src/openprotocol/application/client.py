@@ -21,8 +21,8 @@ class OpenProtocolClient:
         response_bytes = await self._transport.send_receive(raw_frame, timeout)
         msg_mid = MidCodec.decode(response_bytes)
         if (
-            mid_obj.expected_response_mid is not None
-            and msg_mid.MID not in mid_obj.expected_response_mid
+            mid_obj.expected_response_mids is not None
+            and msg_mid.MID not in mid_obj.expected_response_mids
         ):
             raise ValueError(f"Not expected response message {msg_mid.MID}")
         return msg_mid
