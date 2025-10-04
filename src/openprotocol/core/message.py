@@ -19,6 +19,7 @@ class OpenProtocolRawMessage:
         seq_no: int | None = None,
         no_of_mess_parts: int | None = None,
         message_part_number: int | None = None,
+        raw_string: str | None = None,
     ):
         self._mid = mid
         self._revision = revision
@@ -30,6 +31,7 @@ class OpenProtocolRawMessage:
         self._seq_no = seq_no
         self._no_of_mess_parts = no_of_mess_parts
         self._message_part_number = message_part_number
+        self._raw_string = raw_string
 
     @classmethod
     def decode(cls, raw: bytes) -> "OpenProtocolRawMessage":
@@ -62,6 +64,7 @@ class OpenProtocolRawMessage:
             seq_no,
             no_of_mess_parts,
             message_part_number,
+            raw_str,
         )
 
     def encode(self) -> bytes:
@@ -95,10 +98,26 @@ class OpenProtocolRawMessage:
 
         body = header + self._payload
         frame = f"{len(body) + 4:04}" + body
+        self._raw_string = frame
         return frame.encode("ascii")
 
     def __repr__(self):
         return f"<OpenProtocolMessage MID={self._mid} REV={self._revision} Payload='{self._payload}'>"
+
+    def __getitem__(self, key: slice | int) -> str:
+        """Allow slicing or indexing like msg[1:2] or msg[5]."""
+        if self._raw_string is None:
+            return ""
+
+        if isinstance(key, slice):
+            return self._raw_string[key]
+        elif isinstance(key, int):
+            return self._raw_string[key]
+        else:
+            raise TypeError("Invalid argument type. Must be int or slice.")
+
+    def __len__(self) -> int:
+        return len(self._raw_string) if self._raw_string else 0
 
     @property
     def mid(self):
