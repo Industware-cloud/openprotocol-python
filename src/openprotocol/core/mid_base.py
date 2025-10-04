@@ -1,6 +1,6 @@
 from abc import abstractmethod, ABC
 from enum import Enum, verify, UNIQUE, auto
-from typing import Type
+from typing import Type, ClassVar
 
 from openprotocol.core.message import OpenProtocolRawMessage
 
@@ -20,7 +20,7 @@ class OpenProtocolMessage(ABC):
 
     MID: int | None = None
     REVISION: int | None = None
-    expected_response_mids: set[int] = set()
+    expected_response_mids: ClassVar[set[int]] = frozenset()
     MESSAGE_TYPE: MessageType | None = None
 
     def __init_subclass__(cls, **kwargs):
@@ -31,6 +31,14 @@ class OpenProtocolMessage(ABC):
 
         if cls.MID is not None and cls.REVISION is not None:
             MidCodec.register(cls.MID, cls.REVISION, cls)
+
+        parent_set = set()
+        for base in cls.__bases__:
+            if hasattr(base, "expected_response_mids"):
+                parent_set |= base.expected_response_mids
+        # If subclass defined its own extra, merge it
+        extra_set = getattr(cls, "expected_response_mids", set())
+        cls.expected_response_mids = parent_set | extra_set
 
     def create_message(self, payload: str) -> OpenProtocolRawMessage:
         return OpenProtocolRawMessage(self.MID, self.REVISION, payload)
