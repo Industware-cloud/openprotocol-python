@@ -41,6 +41,8 @@ class OpenProtocolMessage(ABC):
         cls.expected_response_mids = parent_set | extra_set
 
     def create_message(self, payload: str) -> OpenProtocolRawMessage:
+        if self.MID is None or self.REVISION is None:
+            raise NotImplementedError("MID or REVISION is not defined")
         return OpenProtocolRawMessage(self.MID, self.REVISION, payload)
 
     @abstractmethod
