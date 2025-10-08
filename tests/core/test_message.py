@@ -1,4 +1,3 @@
-import pytest
 from openprotocol.core.message import OpenProtocolRawMessage
 
 
