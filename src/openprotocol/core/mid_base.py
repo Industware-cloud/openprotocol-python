@@ -20,7 +20,7 @@ class OpenProtocolMessage(ABC):
 
     MID: int | None = None
     REVISION: int | None = None
-    expected_response_mids: ClassVar[set[int]] = frozenset()
+    expected_response_mids: ClassVar[frozenset[int]] = frozenset()
     MESSAGE_TYPE: MessageType | None = None
 
     def __init_subclass__(cls, **kwargs):

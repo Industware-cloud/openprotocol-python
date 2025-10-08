@@ -26,7 +26,7 @@ class DummyMessageSend(OpenProtocolMessage):
     MID = 9998
     REVISION = 1
     MESSAGE_TYPE = MessageType.REQ_MESSAGE
-    expected_response_mids = {DummyMessageRecv.MID}
+    expected_response_mids = frozenset({DummyMessageRecv.MID})
 
     def __init__(self, payload="hello"):
         self.payload = payload
@@ -37,12 +37,13 @@ class DummyMessageSend(OpenProtocolMessage):
 
     def encode(self) -> OpenProtocolRawMessage:
         return self.create_message(self.payload)
+
 
 class DummyMessageSendRes(OpenProtocolMessage):
     MID = 9998
     REVISION = 1
     MESSAGE_TYPE = MessageType.REQ_MESSAGE
-    expected_response_mids = {1234}
+    expected_response_mids = frozenset({1234})
 
     def __init__(self, payload="hello"):
         self.payload = payload
@@ -53,6 +54,7 @@ class DummyMessageSendRes(OpenProtocolMessage):
 
     def encode(self) -> OpenProtocolRawMessage:
         return self.create_message(self.payload)
+
 
 @pytest.mark.asyncio
 async def test_send_receive():
