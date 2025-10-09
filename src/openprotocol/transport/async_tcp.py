@@ -1,8 +1,9 @@
 import asyncio
 from openprotocol.core.mid_base import MidCodec
+from openprotocol.transport.base import BaseTransport
 
 
-class AsyncTcpClient:
+class AsyncTcpClient(BaseTransport):
     """TCP client for Open Protocol transport layer (raw frames)."""
 
     def __init__(self, host: str, port: int):
