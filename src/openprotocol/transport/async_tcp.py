@@ -11,7 +11,6 @@ class AsyncTcpClient(BaseTransport):
         self.port = port
         self.reader: asyncio.StreamReader | None = None
         self.writer: asyncio.StreamWriter | None = None
-        self._lock = asyncio.Lock()
 
     async def connect(self, timeout: float = 5.0):
         """Establish TCP connection with timeout."""
@@ -29,23 +28,37 @@ class AsyncTcpClient(BaseTransport):
         if self.reader is None or self.writer is None:
             raise ConnectionError(f"Connection failed to {self.host}:{self.port}")
 
-    async def send_receive(self, data: bytes, timeout: float = 5.0) -> bytes:
-        if not self.writer or not self.reader:
+    def _ensure_connected(self):
+        if not self.reader or not self.writer:
             raise ConnectionError("The client is not connected")
 
-        async with self._lock:
-            self.writer.write(data)
-            await self.writer.drain()
+    async def _read_frame(self, timeout: float) -> bytes:
+        """Read one full Open Protocol frame."""
+        length_bytes = await asyncio.wait_for(
+            self.reader.readexactly(MidCodec.LENGTH_FIELD_SIZE), timeout
+        )
+        frame_length = int(length_bytes.decode("ascii"))
+        remaining = await asyncio.wait_for(
+            self.reader.readexactly(frame_length - MidCodec.LENGTH_FIELD_SIZE),
+            timeout,
+        )
+        return length_bytes + remaining
 
-            length_bytes = await asyncio.wait_for(
-                self.reader.readexactly(MidCodec.LENGTH_FIELD_SIZE), timeout
-            )
-            frame_length = int(length_bytes.decode("ascii"))
-            remaining = await asyncio.wait_for(
-                self.reader.readexactly(frame_length - MidCodec.LENGTH_FIELD_SIZE),
-                timeout,
-            )
-            return length_bytes + remaining
+    async def send_receive(self, data: bytes, timeout: float = 5.0) -> bytes:
+        """Send a frame and wait for a full response."""
+        await self.send(data)
+        return await self.receive(timeout)
+
+    async def send(self, data: bytes):
+        """Send a frame without waiting for a response."""
+        self._ensure_connected()
+        self.writer.write(data)
+        await self.writer.drain()
+
+    async def receive(self, timeout: float = 5.0) -> bytes:
+        """Receive a full frame."""
+        self._ensure_connected()
+        return await self._read_frame(timeout)
 
     async def close(self):
         if self.writer:
