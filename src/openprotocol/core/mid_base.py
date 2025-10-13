@@ -78,3 +78,7 @@ class MidCodec:
     def encode(cls, mid_obj: OpenProtocolMessage) -> bytes:
         msg = mid_obj.encode()
         return msg.encode()
+
+    @classmethod
+    def get_ack(cls, msg: OpenProtocolMessage) -> OpenProtocolMessage | None:
+        return None
