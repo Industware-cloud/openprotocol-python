@@ -74,7 +74,7 @@ class OpenProtocolClient:
 
     async def send_receive(
         self, mid_obj: OpenProtocolMessage, timeout: float = 5.0
-    ) -> Optional[OpenProtocolMessage]:
+    ) -> OpenProtocolMessage | None:
         """Send a MID and wait for its reply (if applicable)."""
         if not self._startup_done and not self._running:
             raise RuntimeError("Startup sequence not completed")
@@ -82,6 +82,10 @@ class OpenProtocolClient:
         raw_frame = MidCodec.encode(mid_obj)
 
         async with self._lock:
+            if len(mid_obj.expected_response_mids) == 0:
+                raise ValueError(
+                    f"The message doesn't have expected response: {mid_obj.MID}"
+                )
             fut = asyncio.get_running_loop().create_future()
             self._pending_future = fut
             self._pending_expected = mid_obj.expected_response_mids

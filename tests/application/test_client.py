@@ -25,6 +25,23 @@ class DummyMessageRecv(OpenProtocolMessage):
         return self.create_message(self.payload)
 
 
+class DummyMessageNoResp(OpenProtocolMessage):
+    MID = 9997
+    REVISION = 1
+    MESSAGE_TYPE = MessageType.REQ_MESSAGE
+    expected_response_mids = frozenset([])
+
+    def __init__(self, payload="hello"):
+        self.payload = payload
+
+    def encode(self) -> OpenProtocolRawMessage:
+        return self.create_message(self.payload)
+
+    @classmethod
+    def from_message(cls, msg: OpenProtocolRawMessage):
+        return cls(msg.payload)
+
+
 class DummyMessageSend(OpenProtocolMessage):
     MID = 9998
     REVISION = 1
@@ -121,6 +138,18 @@ async def test_send_receive_sets_future_result():
     assert isinstance(result, DummyMessageRecv)
     assert result.payload == "world"
     mock_transport.send.assert_called_once()
+
+
+@pytest.mark.asyncio
+async def test_send_receive_no_response():
+    mock_transport = AsyncMock()
+    client = OpenProtocolClient(mock_transport)
+    client._running = True
+    client._startup_done = True
+
+    with pytest.raises(ValueError):
+        await client.send_receive(DummyMessageNoResp())
+    mock_transport.send.assert_not_called()
 
 
 @pytest.mark.asyncio
