@@ -3,6 +3,12 @@ import asyncio
 import pytest
 from unittest.mock import AsyncMock
 
+from openprotocol.application.base_messages import (
+    OpenProtocolEventSubscribe,
+    CommunicationPositiveAck,
+    CommunicationNegativeAck,
+    OpenProtocolEventUnsubscribe,
+)
 from openprotocol.application.communication import CommunicationStartAcknowledge
 from openprotocol.application.client import OpenProtocolClient
 from openprotocol.core.message import OpenProtocolRawMessage
@@ -203,3 +209,200 @@ async def test_send_receive_not_expected_mid():
     task.cancel()
     await asyncio.sleep(0.1)
     assert task.done()
+
+
+class DummySubscribeMidNoEvent(OpenProtocolEventSubscribe):
+    MID = 42
+    REVISION = 1
+
+    def encode(self):
+        return b"dummy"
+
+    @classmethod
+    def from_message(cls, msg):
+        return cls()
+
+
+class DummySubscribeMid(OpenProtocolEventSubscribe):
+    MID = 42
+    REVISION = 1
+    MID_EVENT = 10
+
+    def encode(self):
+        return b"dummy"
+
+    @classmethod
+    def from_message(cls, msg):
+        return cls()
+
+
+class DummyUnsubscribeMidNoEvent(OpenProtocolEventUnsubscribe):
+    MID = 44
+    REVISION = 1
+
+    def encode(self):
+        return b"dummy"
+
+    @classmethod
+    def from_message(cls, msg):
+        return cls()
+
+
+class DummyUnsubscribeMid(OpenProtocolEventUnsubscribe):
+    MID = 44
+    REVISION = 1
+    MID_EVENT = 10
+
+    def encode(self):
+        return b"dummy"
+
+    @classmethod
+    def from_message(cls, msg):
+        return cls()
+
+
+@pytest.mark.asyncio
+async def test_subscribe_incorrect_mid():
+    mock_transport = AsyncMock()
+    client = OpenProtocolClient(mock_transport)
+
+    with pytest.raises(RuntimeError):
+        await client.subscribe(DummySubscribeMidNoEvent)
+
+
+@pytest.mark.asyncio
+async def test_unsubscribe_incorrect_mid():
+    mock_transport = AsyncMock()
+    client = OpenProtocolClient(mock_transport)
+
+    with pytest.raises(RuntimeError):
+        await client.unsubscribe(DummyUnsubscribeMidNoEvent)
+
+
+@pytest.mark.asyncio
+async def test_subscribe_waits_for_ack_and_registers():
+    mock_transport = AsyncMock()
+    client = OpenProtocolClient(mock_transport)
+    client._startup_done = True
+    client._running = True
+
+    # Mock send_receive to return ACK
+    client.send_receive = AsyncMock(
+        return_value=CommunicationPositiveAck(
+            DummySubscribeMid.REVISION, DummySubscribeMid.MID
+        )
+    )
+
+    await client.subscribe(DummySubscribeMid)
+
+    # Now it should be registered
+    assert DummySubscribeMid.MID_EVENT in client._subscribed_mids
+    client.send_receive.assert_awaited_once()
+
+
+@pytest.mark.asyncio
+async def test_subscribe_raises_on_nack():
+    mock_transport = AsyncMock()
+    client = OpenProtocolClient(mock_transport)
+    client._startup_done = True
+    client._running = True
+
+    client.send_receive = AsyncMock(
+        return_value=CommunicationNegativeAck(
+            DummySubscribeMid.REVISION, DummySubscribeMid.MID, 1
+        )
+    )
+
+    with pytest.raises(RuntimeError):
+        await client.subscribe(DummySubscribeMid)
+
+    # Should NOT register
+    assert DummySubscribeMid.MID not in client._subscribed_mids
+
+
+@pytest.mark.asyncio
+async def test_get_subscription_waits_then_receives():
+    mock_transport = AsyncMock()
+    client = OpenProtocolClient(mock_transport)
+    client._startup_done = True
+    client._running = True
+    msg = DummyMessageSend()
+
+    async def delayed_put():
+        await asyncio.sleep(0.1)
+        await client._subscription_queue.put(msg)
+
+    asyncio.create_task(delayed_put())
+
+    result = await client.get_subscription()
+    assert result is msg
+
+
+@pytest.mark.asyncio
+async def test_unsubscribe_success_registers_removed():
+    mock_transport = AsyncMock()
+    client = OpenProtocolClient(mock_transport)
+    # prepare client as if already connected/subscribed
+    client._running = True
+    client._startup_done = True
+    client._subscribed_mids.add(DummyUnsubscribeMid.MID)
+
+    # Mock send_receive to return ACK
+    client.send_receive = AsyncMock(
+        return_value=CommunicationPositiveAck(
+            DummyUnsubscribeMid.REVISION, DummyUnsubscribeMid.MID
+        )
+    )
+
+    # Act
+    await client.unsubscribe(DummyUnsubscribeMid)
+
+    # Assert: unsubscribed removed and send_receive called
+    assert DummyUnsubscribeMid.MID_EVENT not in client._subscribed_mids
+    client.send_receive.assert_awaited_once()
+
+
+@pytest.mark.asyncio
+async def test_unsubscribe_rejected_raises_and_keeps_subscription():
+    mock_transport = AsyncMock()
+    client = OpenProtocolClient(mock_transport)
+    client._running = True
+    client._startup_done = True
+    client._subscribed_mids.add(DummyUnsubscribeMid.MID_EVENT)
+
+    # Mock send_receive to return NACK
+    client.send_receive = AsyncMock(
+        return_value=CommunicationNegativeAck(
+            DummyUnsubscribeMid.REVISION, DummyUnsubscribeMid.MID, 1
+        )
+    )
+
+    # Act / Assert
+    with pytest.raises(RuntimeError):
+        await client.unsubscribe(DummyUnsubscribeMid)
+
+    # Ensure subscription still present
+    assert DummyUnsubscribeMid.MID_EVENT in client._subscribed_mids
+    client.send_receive.assert_awaited_once()
+
+
+@pytest.mark.asyncio
+async def test_unsubscribe_rejected_raises_and_keeps_subscription_force():
+    mock_transport = AsyncMock()
+    client = OpenProtocolClient(mock_transport)
+    client._running = True
+    client._startup_done = True
+    client._subscribed_mids.add(DummyUnsubscribeMid.MID_EVENT)
+
+    # Mock send_receive to return NACK
+    client.send_receive = AsyncMock(
+        return_value=CommunicationNegativeAck(
+            DummyUnsubscribeMid.REVISION, DummyUnsubscribeMid.MID, 1
+        )
+    )
+
+    await client.unsubscribe(DummyUnsubscribeMid, force=True)
+
+    # Ensure subscription still present
+    assert DummyUnsubscribeMid.MID_EVENT not in client._subscribed_mids
+    client.send_receive.assert_awaited_once()

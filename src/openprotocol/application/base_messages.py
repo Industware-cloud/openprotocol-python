@@ -58,6 +58,18 @@ class OpenProtocolEventSubscribe(OpenProtocolMessage, ABC):
         CommunicationNegativeAck.MID,
         CommunicationPositiveAck.MID,
     }
+    # Mid of event to be subscribed
+    MID_EVENT = None
+
+
+class OpenProtocolEventUnsubscribe(OpenProtocolMessage, ABC):
+    MESSAGE_TYPE = MessageType.EVENT_UNSUBSCRIBE
+    expected_response_mids = {
+        CommunicationNegativeAck.MID,
+        CommunicationPositiveAck.MID,
+    }
+    # Mid of event to be unsubscribed
+    MID_EVENT = None
 
 
 class OpenProtocolEventACK(OpenProtocolMessage, ABC):

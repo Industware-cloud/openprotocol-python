@@ -3,6 +3,11 @@ import logging
 from asyncio import CancelledError
 from typing import Optional, Type, Set
 
+from openprotocol.application.base_messages import (
+    CommunicationPositiveAck,
+    OpenProtocolEventSubscribe,
+    OpenProtocolEventUnsubscribe,
+)
 from openprotocol.application.communication import (
     CommunicationStartMessage,
     CommunicationStopMessage,
@@ -25,6 +30,10 @@ class OpenProtocolClient:
         # Background tasks
         self._keepalive_task: Optional[asyncio.Task] = None
         self._listener_task: Optional[asyncio.Task] = None
+
+        # Subscriptions
+        self._subscribed_mids: Set[int] = set()
+        self._subscription_queue: asyncio.Queue[OpenProtocolMessage] = asyncio.Queue()
 
         # Pending request-response
         self._pending_future: Optional[asyncio.Future] = None
@@ -72,6 +81,54 @@ class OpenProtocolClient:
         await self.send_receive(CommunicationStopMessage())
         await self._close()
 
+    async def subscribe(self, mid_cls: Type[OpenProtocolEventSubscribe]) -> None:
+        """Register subscription MID (controller will push events)."""
+        if mid_cls.MESSAGE_TYPE != MessageType.EVENT_SUBSCRIBE:
+            raise RuntimeError(
+                f"Message type is not for event subscribe: {mid_cls.MESSAGE_TYPE}"
+            )
+        mid_obj = mid_cls()
+
+        if not mid_obj.MID_EVENT:
+            raise RuntimeError(f"MID event not set for MID: {mid_cls.MID}")
+        response = await self.send_receive(mid_obj.MID_EVENT)
+
+        if response and response.MID == CommunicationPositiveAck.MID:
+            self._subscribed_mids.add(mid_obj.MID_EVENT)
+        else:
+            raise RuntimeError(
+                f"Subscription for MID {mid_cls.MID} was rejected or failed"
+            )
+
+    async def unsubscribe(
+        self, mid_cls: Type[OpenProtocolEventUnsubscribe], *, force=False
+    ) -> None:
+        """Register subscription MID (controller will push events)."""
+        if mid_cls.MESSAGE_TYPE != MessageType.EVENT_UNSUBSCRIBE:
+            raise RuntimeError(
+                f"Message type is not for event subscribe: {mid_cls.MESSAGE_TYPE}"
+            )
+        mid_obj = mid_cls()
+        if not mid_obj.MID_EVENT:
+            raise RuntimeError(f"MID event not set for MID: {mid_cls.MID}")
+        response = await self.send_receive(mid_obj)
+
+        if not response or response.MID != CommunicationPositiveAck.MID:
+            if not force:
+                raise RuntimeError(
+                    f"Unsubscription for MID {mid_cls.MID} was rejected or failed"
+                )
+            else:
+                logger.warning(
+                    f"Unsubscription for MID {mid_cls.MID} was rejected - forced"
+                )
+
+        self._subscribed_mids.discard(mid_cls.MID_EVENT)
+
+    async def get_subscription(self) -> OpenProtocolMessage:
+        """Wait for the next async event MID from a subscription."""
+        return await self._subscription_queue.get()
+
     async def send_receive(
         self, mid_obj: OpenProtocolMessage, timeout: float = 5.0
     ) -> OpenProtocolMessage | None:
@@ -114,6 +171,17 @@ class OpenProtocolClient:
                     )
                 ):
                     self._pending_future.set_result(mid_obj)
+                    continue
+
+                if mid_obj.MESSAGE_TYPE == MessageType.EVENT:
+                    if mid_obj.MID in self._subscribed_mids:
+                        await self._subscription_queue.put(mid_obj)
+
+                        # Auto ACK if available
+                        ack_cls = MidCodec.get_ack(mid_obj)
+                        if ack_cls:
+                            async with self._lock:
+                                await self._transport.send(MidCodec.encode(ack_cls))
                     continue
 
                 logger.warning(f"Not expected message: {mid_obj.MID}")

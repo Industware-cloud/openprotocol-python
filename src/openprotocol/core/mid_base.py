@@ -10,6 +10,7 @@ class MessageType(Enum):
     REQ_MESSAGE = auto()
     REQ_REPLY_MESSAGE = auto()
     EVENT_SUBSCRIBE = auto()
+    EVENT_UNSUBSCRIBE = auto()
     EVENT = auto()
     EVENT_ACK = auto()
     OP_COMMAND = auto()
