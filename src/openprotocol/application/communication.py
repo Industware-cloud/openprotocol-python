@@ -45,8 +45,8 @@ class CommunicationStartAcknowledge(OpenProtocolReqReplyMsg):
             logger.warning(f"Byte 31-32 is not 03 {msg[30:32]}")
         controller_name = msg[32:57]
 
-        if msg[57:59] != "03":
-            logger.warning(f"Byte 58-59 is not 03 {msg[57:59]}")
+        if msg[57:59] != "04":
+            logger.warning(f"Byte 58-59 is not 04 {msg[57:59]}")
         supplier_code = msg[59:62]
 
         return cls(msg.revision, cell_id, channel_id, controller_name, supplier_code)
