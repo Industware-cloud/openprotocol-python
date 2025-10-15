@@ -58,7 +58,7 @@ class CommunicationStopMessage(OpenProtocolReqMsg):
     expected_response_mids = {CommunicationPositiveAck.MID}
 
     def encode(self) -> OpenProtocolRawMessage:
-        return self.create_message("")
+        return self.create_message()
 
 
 class CommunicationStartMessage(OpenProtocolReqMsg):
@@ -70,4 +70,4 @@ class CommunicationStartMessage(OpenProtocolReqMsg):
     }
 
     def encode(self) -> OpenProtocolRawMessage:
-        return self.create_message("")
+        return self.create_message()
