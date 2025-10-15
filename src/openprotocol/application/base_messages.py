@@ -45,7 +45,10 @@ class CommunicationPositiveAck(OpenProtocolReqReplyMsg):
 
 class OpenProtocolReqMsg(OpenProtocolMessage, ABC):
     MESSAGE_TYPE = MessageType.REQ_MESSAGE
-    expected_response_mids = {CommunicationNegativeAck.MID}
+    # NACK or some data
+    expected_response_mids = {
+        CommunicationNegativeAck.MID,
+    }
 
     @classmethod
     def from_message(cls, msg: OpenProtocolRawMessage) -> "OpenProtocolMessage":
@@ -61,6 +64,10 @@ class OpenProtocolEventSubscribe(OpenProtocolMessage, ABC):
     # Mid of event to be subscribed
     MID_EVENT = None
 
+    @classmethod
+    def from_message(cls, msg: OpenProtocolRawMessage) -> "OpenProtocolMessage":
+        raise NotImplementedError()
+
 
 class OpenProtocolEventUnsubscribe(OpenProtocolMessage, ABC):
     MESSAGE_TYPE = MessageType.EVENT_UNSUBSCRIBE
@@ -71,9 +78,17 @@ class OpenProtocolEventUnsubscribe(OpenProtocolMessage, ABC):
     # Mid of event to be unsubscribed
     MID_EVENT = None
 
+    @classmethod
+    def from_message(cls, msg: OpenProtocolRawMessage) -> "OpenProtocolMessage":
+        raise NotImplementedError()
+
 
 class OpenProtocolEventACK(OpenProtocolMessage, ABC):
     MESSAGE_TYPE = MessageType.EVENT_ACK
+
+    @classmethod
+    def from_message(cls, msg: OpenProtocolRawMessage) -> "OpenProtocolMessage":
+        raise NotImplementedError()
 
 
 class OpenProtocolEvent(OpenProtocolMessage, ABC):
@@ -83,7 +98,12 @@ class OpenProtocolEvent(OpenProtocolMessage, ABC):
 
 class OpenProtocolCommandMsg(OpenProtocolMessage, ABC):
     MESSAGE_TYPE = MessageType.OP_COMMAND
+    # Response only ACK or NACK
     expected_response_mids = {
         CommunicationNegativeAck.MID,
         CommunicationPositiveAck.MID,
     }
+
+    @classmethod
+    def from_message(cls, msg: OpenProtocolRawMessage) -> "OpenProtocolMessage":
+        raise NotImplementedError()
