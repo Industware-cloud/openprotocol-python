@@ -44,7 +44,9 @@ class OpenProtocolMessage(ABC):
     def create_message(self, payload: str = "") -> OpenProtocolRawMessage:
         if self.MID is None or self.REVISION is None:
             raise NotImplementedError("MID or REVISION is not defined")
-        return OpenProtocolRawMessage(self.MID, self.REVISION, payload)
+        msg = OpenProtocolRawMessage(self.MID, self.REVISION, payload)
+        msg.encode()
+        return msg
 
     @abstractmethod
     def encode(self) -> OpenProtocolRawMessage:
