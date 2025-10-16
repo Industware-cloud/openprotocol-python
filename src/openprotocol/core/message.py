@@ -116,6 +116,32 @@ class OpenProtocolRawMessage:
         else:
             raise TypeError("Invalid argument type. Must be int or slice.")
 
+    def __setitem__(self, key: slice | int, value: str) -> None:
+        """Allow writing to arbitrary position (auto-expanding if needed)."""
+        if not isinstance(value, str):
+            raise TypeError("Assigned value must be a string")
+
+        # auto-expand with spaces if needed
+        def ensure_length(target_len: int):
+            if len(self._raw_string) < target_len:
+                self._raw_string += " " * (target_len - len(self._raw_string))
+
+        if isinstance(key, int):
+            ensure_length(key + 1)
+            self._raw_string = (
+                self._raw_string[:key] + value + self._raw_string[key + len(value) :]
+            )
+        elif isinstance(key, slice):
+            start = key.start or 0
+            stop = key.stop if key.stop is not None else len(self._raw_string)
+            # If slice goes beyond length → expand before writing
+            ensure_length(stop)
+            self._raw_string = (
+                self._raw_string[:start] + value + self._raw_string[stop:]
+            )
+        else:
+            raise TypeError("Invalid key type: must be int or slice")
+
     def __len__(self) -> int:
         return len(self._raw_string) if self._raw_string else 0
 
@@ -130,3 +156,7 @@ class OpenProtocolRawMessage:
     @property
     def payload(self):
         return self._payload
+
+    @property
+    def raw_str(self):
+        return self._raw_string
