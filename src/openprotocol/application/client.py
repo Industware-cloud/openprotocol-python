@@ -1,6 +1,5 @@
 import asyncio
 import logging
-from asyncio import CancelledError
 from typing import Optional, Type, Set
 
 from openprotocol.application.base_messages import (
@@ -53,7 +52,7 @@ class OpenProtocolClient:
         comm_start_mid = CommunicationStartMessage()
         comm = await self.send_receive(comm_start_mid)
         if not isinstance(comm, CommunicationStartAcknowledge):
-            raise ConnectionError(f"Communication not acknowledged")
+            raise ConnectionError("Communication not acknowledged")
         self._startup_done = True
 
         self._listener_task = asyncio.create_task(self._listener_loop())
