@@ -36,9 +36,6 @@ class OpenProtocolMessage(ABC):
         if cls.MESSAGE_TYPE is None:
             raise NotImplementedError(f"{cls.__name__}: MESSAGE_TYPE must be defined")
 
-        if cls.MID is not None:
-            MidCodec.register(cls.MID, cls)
-
         parent_set = set()
         for base in cls.__bases__:
             if hasattr(base, "expected_response_mids"):
@@ -46,6 +43,12 @@ class OpenProtocolMessage(ABC):
         # If subclass defined its own extra, merge it
         extra_set = getattr(cls, "expected_response_mids", set())
         cls.expected_response_mids = parent_set | extra_set
+
+    @classmethod
+    def register(cls: Type["OpenProtocolMessage"]) -> None:
+        if cls.MID is None:
+            raise ValueError(f"{cls.__name__}: cannot register without MID")
+        MidCodec.register(cls.MID, cls)
 
     def create_message(
         self, revision: int, payload: str = ""
@@ -92,3 +95,8 @@ class MidCodec:
     @classmethod
     def get_ack(cls, msg: OpenProtocolMessage) -> OpenProtocolMessage | None:
         return None
+
+
+def register_messages(*message_classes: type[OpenProtocolMessage]) -> None:
+    for cls in message_classes:
+        cls.register()

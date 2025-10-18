@@ -12,7 +12,12 @@ from openprotocol.application.base_messages import (
 from openprotocol.application.communication import CommunicationStartAcknowledge
 from openprotocol.application.client import OpenProtocolClient
 from openprotocol.core.message import OpenProtocolRawMessage
-from openprotocol.core.mid_base import OpenProtocolMessage, MidCodec, MessageType
+from openprotocol.core.mid_base import (
+    OpenProtocolMessage,
+    MidCodec,
+    MessageType,
+    register_messages,
+)
 
 
 class DummyMessageRecv(OpenProtocolMessage):
@@ -84,6 +89,9 @@ class DummyMessageSendRes(OpenProtocolMessage):
 
     def encode(self) -> OpenProtocolRawMessage:
         return self.create_message(self.REVISION, self.payload)
+
+
+register_messages(DummyMessageRecv, DummyMessageSendRes)
 
 
 @pytest.mark.asyncio
