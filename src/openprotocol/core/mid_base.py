@@ -34,7 +34,7 @@ class OpenProtocolMessage(ABC):
             return
 
         if cls.MESSAGE_TYPE is None:
-            raise NotImplementedError("MESSAGE_TYPE is not defined")
+            raise NotImplementedError(f"{cls.__name__}: MESSAGE_TYPE must be defined")
 
         if cls.MID is not None:
             MidCodec.register(cls.MID, cls)
