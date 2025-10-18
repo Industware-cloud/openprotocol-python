@@ -146,12 +146,14 @@ class OpenProtocolClient:
             self._pending_future = fut
             self._pending_expected = mid_obj.expected_response_mids
             await self._transport.send(raw_frame)
-
+        res: OpenProtocolMessage | None = None
         try:
-            return await asyncio.wait_for(fut, timeout=timeout)
+            res = await asyncio.wait_for(fut, timeout=timeout)
         finally:
+            self._pending_future.done()
             self._pending_future = None
             self._pending_expected = set()
+            return res
 
     async def _listener_loop(self) -> None:
         """Single receive loop: dispatch replies and events."""
