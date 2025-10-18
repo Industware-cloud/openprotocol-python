@@ -64,7 +64,7 @@ class OpenProtocolEventSubscribe(OpenProtocolMessage, ABC):
     # Mid of event to be subscribed
     MID_EVENT = None
 
-    def __init__(self, revision: int = 1):
+    def __init__(self, revision: int = 1) -> None:
         """
         :param revision: The revision is used to inform controller which revision to subscribe to
                 any class should set the revision based on supported decoding of EventData

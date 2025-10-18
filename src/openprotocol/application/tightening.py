@@ -14,7 +14,7 @@ logger = logging.getLogger(__name__)
 
 class LastTighteningResultDataSubscribe(OpenProtocolEventSubscribe):
     MID = 60
-    REVISION = 1
+    REVISION = 2
 
     def __init__(self) -> None:
         super().__init__(self.REVISION)
