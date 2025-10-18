@@ -16,7 +16,7 @@ class CommunicationNegativeAck(OpenProtocolReqReplyMsg):
     MID = 4
 
     def __init__(self, revision, mid, err_code):
-        self._revision = revision
+        super().__init__(revision)
         self._mid = mid
         self._err_code = err_code
 
@@ -34,7 +34,7 @@ class CommunicationPositiveAck(OpenProtocolReqReplyMsg):
     MID = 5
 
     def __init__(self, revision, mid):
-        self._revision = revision
+        super().__init__(revision)
         self._mid = mid
 
     @classmethod
@@ -64,6 +64,13 @@ class OpenProtocolEventSubscribe(OpenProtocolMessage, ABC):
     # Mid of event to be subscribed
     MID_EVENT = None
 
+    def __init__(self, revision: int = 1):
+        """
+        :param revision: The revision is used to inform controller which revision to subscribe to
+                any class should set the revision based on supported decoding of EventData
+        """
+        super().__init__(revision)
+
     @classmethod
     def from_message(cls, msg: OpenProtocolRawMessage) -> "OpenProtocolMessage":
         raise NotImplementedError()
@@ -77,6 +84,10 @@ class OpenProtocolEventUnsubscribe(OpenProtocolMessage, ABC):
     }
     # Mid of event to be unsubscribed
     MID_EVENT = None
+    REVISION = 1
+
+    def __init__(self):
+        super().__init__(self.REVISION)
 
     @classmethod
     def from_message(cls, msg: OpenProtocolRawMessage) -> "OpenProtocolMessage":

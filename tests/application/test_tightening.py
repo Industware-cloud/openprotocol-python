@@ -11,6 +11,7 @@ class TighteningDevice(OpenProtocolEvent):
     REVISION = 1
 
     def __init__(self, revision: int | None = None):
+        super().__init__(revision)
         self._revision = revision or TighteningDevice.REVISION
 
     def encode(self) -> OpenProtocolRawMessage:

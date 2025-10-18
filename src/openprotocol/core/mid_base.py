@@ -24,8 +24,11 @@ class OpenProtocolMessage(ABC):
     expected_response_mids: ClassVar[frozenset[int]] = frozenset()
     MESSAGE_TYPE: MessageType | None = None
 
+    def __init__(self, revision: int) -> None:
+        self.REVISION = revision
+
     def __init_subclass__(cls, **kwargs):
-        """Auto-register every subclass that defines MID/REVISION."""
+        """Auto-register every subclass that defines MID"""
         super().__init_subclass__(**kwargs)
         if cls is OpenProtocolMessage:
             return
@@ -33,8 +36,8 @@ class OpenProtocolMessage(ABC):
         if cls.MESSAGE_TYPE is None:
             raise NotImplementedError("MESSAGE_TYPE is not defined")
 
-        if cls.MID is not None and cls.REVISION is not None:
-            MidCodec.register(cls.MID, cls.REVISION, cls)
+        if cls.MID is not None:
+            MidCodec.register(cls.MID, cls)
 
         parent_set = set()
         for base in cls.__bases__:
@@ -44,10 +47,12 @@ class OpenProtocolMessage(ABC):
         extra_set = getattr(cls, "expected_response_mids", set())
         cls.expected_response_mids = parent_set | extra_set
 
-    def create_message(self, payload: str = "") -> OpenProtocolRawMessage:
-        if self.MID is None or self.REVISION is None:
-            raise NotImplementedError("MID or REVISION is not defined")
-        msg = OpenProtocolRawMessage(self.MID, self.REVISION, payload)
+    def create_message(
+        self, revision: int, payload: str = ""
+    ) -> OpenProtocolRawMessage:
+        if self.MID is None:
+            raise NotImplementedError("MID is not defined")
+        msg = OpenProtocolRawMessage(self.MID, revision, payload)
         msg.encode()
         return msg
 
@@ -66,18 +71,17 @@ class OpenProtocolMessage(ABC):
 class MidCodec:
     LENGTH_FIELD_SIZE = 4  # first 4 chars = frame length
 
-    _registry: dict[tuple[int, int], Type[OpenProtocolMessage]] = {}
+    _registry: dict[int, Type[OpenProtocolMessage]] = {}
 
     @classmethod
-    def register(cls, mid: int, rev: int, parser_cls: Type[OpenProtocolMessage]):
-        cls._registry[(mid, rev)] = parser_cls
+    def register(cls, mid: int, parser_cls: Type[OpenProtocolMessage]):
+        cls._registry[mid] = parser_cls
 
     @classmethod
     def decode(cls, raw: bytes) -> OpenProtocolMessage:
         msg = OpenProtocolRawMessage.decode(raw)
-        key = (msg.mid, msg.revision)
-        if key in cls._registry:
-            return cls._registry[key].from_message(msg)
+        if msg.mid in cls._registry:
+            return cls._registry[msg.mid].from_message(msg)
         raise ValueError(f"Not supported mid {msg.mid}")
 
     @classmethod

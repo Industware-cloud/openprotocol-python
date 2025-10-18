@@ -22,7 +22,7 @@ class CommunicationStartAcknowledge(OpenProtocolReqReplyMsg):
         controller_name: str,
         supplier_code: str,
     ):
-        self._revision = revision
+        super().__init__(revision)
         self._cell_id = cell_id
         self._channel_id = channel_id
         self._controller_name = controller_name
@@ -55,19 +55,35 @@ class CommunicationStartAcknowledge(OpenProtocolReqReplyMsg):
 class CommunicationStopMessage(OpenProtocolReqMsg):
     MID = 3
     REVISION = 1
+
     expected_response_mids = {CommunicationPositiveAck.MID}
 
+    def __init__(self):
+        super().__init__(CommunicationStopMessage.REVISION)
+
     def encode(self) -> OpenProtocolRawMessage:
-        return self.create_message()
+        return self.create_message(self.REVISION)
+
+    @classmethod
+    def from_message(cls, msg: OpenProtocolRawMessage) -> "OpenProtocolMessage":
+        return cls()
 
 
 class CommunicationStartMessage(OpenProtocolReqMsg):
     MID = 1
     REVISION = 3
-    expected_response_mid = {
+
+    expected_response_mids = {
         CommunicationStartAcknowledge.MID,
         CommunicationNegativeAck.MID,
     }
 
+    def __init__(self):
+        super().__init__(CommunicationStartMessage.REVISION)
+
     def encode(self) -> OpenProtocolRawMessage:
-        return self.create_message()
+        return self.create_message(self.REVISION)
+
+    @classmethod
+    def from_message(cls, msg: OpenProtocolRawMessage) -> "OpenProtocolMessage":
+        return cls()

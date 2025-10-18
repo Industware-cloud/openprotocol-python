@@ -7,7 +7,8 @@ class SelectParameterSet(OpenProtocolCommandMsg):
     REVISION = 1
 
     def __init__(self, id_set: int):
+        super().__init__(self.REVISION)
         self._id_set = id_set
 
     def encode(self) -> OpenProtocolRawMessage:
-        return self.create_message(str(self._id_set).zfill(3))
+        return self.create_message(self.REVISION, str(self._id_set).zfill(3))

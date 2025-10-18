@@ -21,6 +21,7 @@ class DummyMessageRecv(OpenProtocolMessage):
     MESSAGE_TYPE = MessageType.REQ_REPLY_MESSAGE
 
     def __init__(self, payload="hello"):
+        super().__init__(self.REVISION)
         self.payload = payload
 
     @classmethod
@@ -28,7 +29,7 @@ class DummyMessageRecv(OpenProtocolMessage):
         return cls(msg.payload)
 
     def encode(self) -> OpenProtocolRawMessage:
-        return self.create_message(self.payload)
+        return self.create_message(self.REVISION, self.payload)
 
 
 class DummyMessageNoResp(OpenProtocolMessage):
@@ -38,10 +39,11 @@ class DummyMessageNoResp(OpenProtocolMessage):
     expected_response_mids = frozenset([])
 
     def __init__(self, payload="hello"):
+        super().__init__(self.REVISION)
         self.payload = payload
 
     def encode(self) -> OpenProtocolRawMessage:
-        return self.create_message(self.payload)
+        return self.create_message(self.REVISION, self.payload)
 
     @classmethod
     def from_message(cls, msg: OpenProtocolRawMessage):
@@ -55,6 +57,7 @@ class DummyMessageSend(OpenProtocolMessage):
     expected_response_mids = frozenset({DummyMessageRecv.MID})
 
     def __init__(self, payload="hello"):
+        super().__init__(self.REVISION)
         self.payload = payload
 
     @classmethod
@@ -62,7 +65,7 @@ class DummyMessageSend(OpenProtocolMessage):
         return cls(msg.payload)
 
     def encode(self) -> OpenProtocolRawMessage:
-        return self.create_message(self.payload)
+        return self.create_message(self.REVISION, self.payload)
 
 
 class DummyMessageSendRes(OpenProtocolMessage):
@@ -72,6 +75,7 @@ class DummyMessageSendRes(OpenProtocolMessage):
     expected_response_mids = frozenset({1234})
 
     def __init__(self, payload="hello"):
+        super().__init__(self.REVISION)
         self.payload = payload
 
     @classmethod
@@ -79,7 +83,7 @@ class DummyMessageSendRes(OpenProtocolMessage):
         return cls(msg.payload)
 
     def encode(self) -> OpenProtocolRawMessage:
-        return self.create_message(self.payload)
+        return self.create_message(self.REVISION, self.payload)
 
 
 @pytest.mark.asyncio
@@ -220,7 +224,7 @@ class DummySubscribeMidNoEvent(OpenProtocolEventSubscribe):
 
     @classmethod
     def from_message(cls, msg):
-        return cls()
+        return cls(msg.revision)
 
 
 class DummySubscribeMid(OpenProtocolEventSubscribe):

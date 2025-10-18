@@ -14,9 +14,13 @@ logger = logging.getLogger(__name__)
 
 class LastTighteningResultDataSubscribe(OpenProtocolEventSubscribe):
     MID = 60
+    REVISION = 1
+
+    def __init__(self) -> None:
+        super().__init__(self.REVISION)
 
     def encode(self) -> OpenProtocolRawMessage:
-        return self.create_message()
+        return self.create_message(self.REVISION)
 
 
 class LastTighteningResultData(OpenProtocolEvent):
@@ -42,7 +46,8 @@ class LastTighteningResultData(OpenProtocolEvent):
         def __str__(self):
             return self.description
 
-    def __init__(self):
+    def __init__(self, revision: int):
+        super().__init__(revision)
         self.final_torque = ""
         self.tightening_status_field = ""
         self.tightening_status = 0
@@ -65,7 +70,7 @@ class LastTighteningResultData(OpenProtocolEvent):
 
     @classmethod
     def from_message(cls, msg: OpenProtocolRawMessage) -> "LastTighteningResultData":
-        msg_obj = cls()
+        msg_obj = cls(msg.revision)
         if msg.revision == 1:
             msg_obj._rev1(msg)
         elif 2 <= msg.revision <= 998:
@@ -129,7 +134,7 @@ class LastTighteningResultDataACK(OpenProtocolEventACK):
     REVISION = 1
 
     def encode(self) -> OpenProtocolRawMessage:
-        return self.create_message()
+        return self.create_message(self.REVISION)
 
 
 class LastTighteningResultDataUnsubscribe(OpenProtocolEventUnsubscribe):
@@ -137,4 +142,4 @@ class LastTighteningResultDataUnsubscribe(OpenProtocolEventUnsubscribe):
     REVISION = 1
 
     def encode(self) -> OpenProtocolRawMessage:
-        return self.create_message()
+        return self.create_message(self.REVISION)
