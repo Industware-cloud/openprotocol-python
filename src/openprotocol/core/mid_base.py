@@ -27,6 +27,9 @@ class OpenProtocolMessage(ABC):
     def __init_subclass__(cls, **kwargs):
         """Auto-register every subclass that defines MID/REVISION."""
         super().__init_subclass__(**kwargs)
+        if cls is OpenProtocolMessage:
+            return
+
         if cls.MESSAGE_TYPE is None:
             raise NotImplementedError("MESSAGE_TYPE is not defined")
 
