@@ -50,12 +50,12 @@ class OpenProtocolClient:
         await self._transport.connect()
         self._running = True
         comm_start_mid = CommunicationStartMessage()
+        self._listener_task = asyncio.create_task(self._listener_loop())
         comm = await self.send_receive(comm_start_mid)
         if not isinstance(comm, CommunicationStartAcknowledge):
+            self._listener_task.cancel()
             raise ConnectionError("Communication not acknowledged")
         self._startup_done = True
-
-        self._listener_task = asyncio.create_task(self._listener_loop())
 
     async def _close(self) -> None:
         """Stop background tasks and close transport."""
