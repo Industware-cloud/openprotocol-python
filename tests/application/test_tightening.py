@@ -15,23 +15,22 @@ class TighteningDevice(OpenProtocolEvent):
         self._revision = revision or TighteningDevice.REVISION
 
     def encode(self) -> OpenProtocolRawMessage:
-        msg = OpenProtocolRawMessage(self.MID, self._revision, "")
-        msg.encode()
-        msg[20:22] = "01"
-        msg[22:26] = "0001"  # cell_id 23-26
-        msg[26:28] = "02"
-        msg[28:30] = "01"  # channel_id 29-30
-        msg[30:32] = "03"
-        msg[32:57] = "Test controller"  # 33-57 torque_controller_name
-        msg[90:93] = "001"  # pset_number 91-93
-        msg[105:107] = "09"
-        msg[107:108] = "1"  ## tightening_status 108
-        msg[108:110] = "10"
-        msg[110:111] = "1"  # torque_status 111 (0=Low,1=OK,2=High)
-        msg[113:114] = "1"  # 114 angle_status (0=Low,1=OK,2=High)
-        msg[140:146] = "000120"  # torque 141-146
-        msg[176:195] = "YYYY-MM-DD:HH:MM:SS"  # timestamp
-        return msg
+        payload = list(" " * 175)
+        payload[0:2] = "01"
+        payload[2:6] = "0001"  # cell_id 23-26
+        payload[6:8] = "02"
+        payload[8:10] = "01"  # channel_id 29-30
+        payload[10:12] = "03"
+        payload[12:37] = "Test controller".ljust(37-12)  # 33-57 torque_controller_name
+        payload[70:73] = "001"  # pset_number 91-93
+        payload[85:87] = "09"
+        payload[87:88] = "1"  ## tightening_status 108
+        payload[88:90] = "10"
+        payload[90:91] = "1"  # torque_status 111 (0=Low,1=OK,2=High)
+        payload[93:94] = "1"  # 114 angle_status (0=Low,1=OK,2=High)
+        payload[120:126] = "000120"  # torque 141-146
+        payload[156:175] = "YYYY-MM-DD:HH:MM:SS"  # timestamp
+        return self.create_message(self._revision, "".join(payload))
 
     @classmethod
     def from_message(cls, msg: OpenProtocolRawMessage) -> "OpenProtocolMessage":
