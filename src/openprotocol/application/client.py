@@ -148,7 +148,8 @@ class OpenProtocolClient:
             await self._transport.send(raw_frame)
         res: OpenProtocolMessage | None = None
         try:
-            res = await asyncio.wait_for(fut, timeout=timeout)
+            if len(self._pending_expected) >= 1:
+                res = await asyncio.wait_for(fut, timeout=timeout)
         finally:
             self._pending_future.done()
             self._pending_future = None
@@ -165,11 +166,7 @@ class OpenProtocolClient:
                 if (
                     self._pending_future
                     and not self._pending_future.done()
-                    and (
-                        mid_obj.MID in self._pending_expected
-                        or mid_obj.MESSAGE_TYPE == MessageType.REQ_REPLY_MESSAGE
-                        or mid_obj.MESSAGE_TYPE == MessageType.OP_COMMAND
-                    )
+                    and (mid_obj.MID in self._pending_expected)
                 ):
                     self._pending_future.set_result(mid_obj)
                     continue
