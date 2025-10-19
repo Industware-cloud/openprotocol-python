@@ -83,8 +83,11 @@ class MidCodec:
     @classmethod
     def decode(cls, raw: bytes) -> OpenProtocolMessage:
         msg = OpenProtocolRawMessage.decode(raw)
-        if msg.mid in cls._registry:
-            return cls._registry[msg.mid].from_message(msg)
+        try:
+            if msg.mid in cls._registry:
+                return cls._registry[msg.mid].from_message(msg)
+        except NotImplementedError:
+            pass
         raise ValueError(f"Not supported mid {msg.mid}")
 
     @classmethod
