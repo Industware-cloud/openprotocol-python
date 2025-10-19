@@ -118,8 +118,11 @@ class SimulatedController:
                 frame_length = int(length_bytes.decode("ascii"))
                 remaining = await reader.readexactly(frame_length - 4)
                 raw = length_bytes + remaining
-
-                msg = MidCodec.decode(raw)
+                try:
+                    msg = MidCodec.decode(raw)
+                except ValueError as e:
+                    print(f"Controller: {e}")
+                    continue
                 print(f"Controller received MID={msg.MID}")
 
                 # Find matching expectation
@@ -134,6 +137,8 @@ class SimulatedController:
 
         except asyncio.IncompleteReadError:
             print("Client disconnected.")
+        except Exception as e:
+            print(f"Controller: {e}")
         finally:
             print("Client closed.")
             writer.close()
