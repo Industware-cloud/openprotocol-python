@@ -34,7 +34,7 @@ version = "0.1.0"
 description = "Python library for Open Protocol communication (e.g., tightening systems)"
 authors = ["Tomas Krcka <tomas.krcka@industware.cloud>"]
 license = "MIT"
-packages = [{ include = "src" }]
+packages = [{ include = "openprotocol", from = "src" }]
 
 [tool.poetry.group.dev.dependencies]
 pytest = "^8.2.0"
