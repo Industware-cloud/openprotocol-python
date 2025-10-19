@@ -90,7 +90,7 @@ class OpenProtocolClient:
 
         if not mid_obj.MID_EVENT:
             raise RuntimeError(f"MID event not set for MID: {mid_cls.MID}")
-        response = await self.send_receive(mid_obj.MID_EVENT)
+        response = await self.send_receive(mid_obj)
 
         if response and response.MID == CommunicationPositiveAck.MID:
             self._subscribed_mids.add(mid_obj.MID_EVENT)
