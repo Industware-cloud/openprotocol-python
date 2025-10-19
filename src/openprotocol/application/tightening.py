@@ -8,6 +8,7 @@ from openprotocol.application.base_messages import (
     OpenProtocolEventUnsubscribe,
 )
 from openprotocol.core.message import OpenProtocolRawMessage
+from openprotocol.core.mid_base import OpenProtocolMessage
 
 logger = logging.getLogger(__name__)
 
@@ -15,12 +16,17 @@ logger = logging.getLogger(__name__)
 class LastTighteningResultDataSubscribe(OpenProtocolEventSubscribe):
     MID = 60
     REVISION = 2
+    MID_EVENT = 61
 
     def __init__(self) -> None:
         super().__init__(self.REVISION)
 
     def encode(self) -> OpenProtocolRawMessage:
         return self.create_message(self.REVISION)
+
+    @classmethod
+    def from_message(cls, msg: OpenProtocolRawMessage) -> "OpenProtocolMessage":
+        return cls()
 
 
 class LastTighteningResultData(OpenProtocolEvent):
