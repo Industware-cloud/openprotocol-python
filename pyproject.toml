@@ -3,9 +3,9 @@ requires = ["poetry-core>=2.0.0"]
 build-backend = "poetry.core.masonry.api"
 
 [project]
-name = "openprotocol"
+name = "openprotocol-atlascopco"
 version = "0.1.0"
-description = "Python library for Open Protocol communication (e.g., tightening systems)"
+description = "Python library for Open Protocol communication from Atlas Copco (e.g., tightening systems)"
 requires-python = ">=3.12,<4.0"
 license = { text = "MIT" }
 authors = [
@@ -29,7 +29,7 @@ asyncio_mode = "auto"
 
 # Poetry compatibility section
 [tool.poetry]
-name = "openprotocol"
+name = "openprotocol-atlascopco"
 version = "0.1.0"
 description = "Python library for Open Protocol communication (e.g., tightening systems)"
 authors = ["Tomas Krcka <tomas.krcka@industware.cloud>"]
