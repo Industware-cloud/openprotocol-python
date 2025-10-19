@@ -1,8 +1,42 @@
 import asyncio
-from typing import Type, Optional, Any
+from typing import Optional
 
+from openprotocol.application import CommunicationPositiveAck
+from openprotocol.application.communication import (
+    CommunicationStartMessage,
+    CommunicationStopMessage,
+    CommunicationStartAcknowledge,
+)
 from openprotocol.core.message import OpenProtocolRawMessage
-from openprotocol.core.mid_base import OpenProtocolMessage, MidCodec
+from openprotocol.core.mid_base import OpenProtocolMessage, MidCodec, register_messages
+
+
+class CommunicationStartAcknowledgeController(CommunicationStartAcknowledge):
+    REVISION = 1
+
+    def encode(self) -> OpenProtocolRawMessage:
+        msg = list(" " * 42)
+        msg[0:2] = "01"
+        msg[2:6] = str(self._cell_id).zfill(4)
+        msg[6:8] = "02"
+        msg[8:10] = str(self._channel_id).zfill(2)
+        msg[10:12] = "03"
+        msg[12:37] = self._controller_name.ljust(37 - 12)
+        msg[37:39] = "04"
+        msg[39:42] = self._supplier_code.ljust(39 - 42)
+        return self.create_message(self.REVISION, "".join(msg))
+
+
+class CommunicationPositiveAckController(CommunicationPositiveAck):
+    REVISION = 1
+
+    def encode(self) -> OpenProtocolRawMessage:
+        payload = str(self._mid).zfill(4)
+        msg = self.create_message(self.REVISION, payload)
+        return msg
+
+
+register_messages(CommunicationStartMessage, CommunicationStopMessage)
 
 
 class SimulatedController:
@@ -14,6 +48,22 @@ class SimulatedController:
         self._server: Optional[asyncio.AbstractServer] = None
         self._expected: list[tuple[int, int, str]] = []  # (MID, REV, raw_response)
         self._connections: list[tuple[asyncio.StreamReader, asyncio.StreamWriter]] = []
+        self._set_connection_start_support()
+
+    def _set_connection_start_support(self):
+        resp = CommunicationStartAcknowledgeController(1, 1, 1, "Testing", "001")
+        self.expect(
+            CommunicationStartMessage.MID,
+            CommunicationStartMessage.REVISION,
+            resp.encode(),
+        )
+        self.expect(
+            CommunicationStopMessage.MID,
+            CommunicationStopMessage.REVISION,
+            CommunicationPositiveAckController(
+                1, CommunicationStopMessage.MID
+            ).encode(),
+        )
 
     async def start(self):
         """Start listening server."""

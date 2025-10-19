@@ -21,7 +21,9 @@ class TighteningDevice(OpenProtocolEvent):
         payload[6:8] = "02"
         payload[8:10] = "01"  # channel_id 29-30
         payload[10:12] = "03"
-        payload[12:37] = "Test controller".ljust(37-12)  # 33-57 torque_controller_name
+        payload[12:37] = "Test controller".ljust(
+            37 - 12
+        )  # 33-57 torque_controller_name
         payload[70:73] = "001"  # pset_number 91-93
         payload[85:87] = "09"
         payload[87:88] = "1"  ## tightening_status 108
