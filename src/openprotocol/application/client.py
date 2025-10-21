@@ -72,13 +72,14 @@ class OpenProtocolClient:
 
         await self._transport.close()
 
-    async def disconnect(self) -> None:
+    async def disconnect(self) -> bool:
         """Disconnect from server."""
         if not self._running or not self._startup_done:
-            return
+            return True
 
-        await self.send_receive(CommunicationStopMessage())
+        comm = await self.send_receive(CommunicationStopMessage())
         await self._close()
+        return isinstance(comm, CommunicationPositiveAck)
 
     async def subscribe(self, mid_cls: Type[OpenProtocolEventSubscribe]) -> None:
         """Register subscription MID (controller will push events)."""

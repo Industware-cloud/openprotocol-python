@@ -16,5 +16,6 @@ async def test_client_startup_sequence():
 
     await asyncio.sleep(0.2)
 
-    await client.disconnect()
+    res = await client.disconnect()
+    assert res
     await controller.stop()
