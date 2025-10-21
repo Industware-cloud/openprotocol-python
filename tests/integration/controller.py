@@ -116,7 +116,9 @@ class SimulatedController:
                 # Read frame length first
                 length_bytes = await reader.readexactly(4)
                 frame_length = int(length_bytes.decode("ascii"))
-                remaining = await reader.readexactly(frame_length - 4)
+                remaining = await reader.readexactly(
+                    frame_length + 1 - 4
+                )  # 1 (NUL) at the end, 4 HEADER size
                 raw = length_bytes + remaining
                 try:
                     msg = MidCodec.decode(raw)

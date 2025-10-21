@@ -73,6 +73,7 @@ class OpenProtocolMessage(ABC):
 
 class MidCodec:
     LENGTH_FIELD_SIZE = 4  # first 4 chars = frame length
+    FOOTER_FIELD_SIZE = 1
 
     _registry: dict[int, Type[OpenProtocolMessage]] = {}
 

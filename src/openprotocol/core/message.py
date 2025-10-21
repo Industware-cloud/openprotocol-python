@@ -7,6 +7,7 @@ class OpenProtocolRawMessage:
 
     # Open Protocol spec: header fields (after 4-char length)
     HEADER_SIZE = 20  # minimal, may be longer if optional fields enabled
+    FOOTER_FIELD = "\x00"
 
     def __init__(
         self,
@@ -97,7 +98,7 @@ class OpenProtocolRawMessage:
         )
 
         body = header + self._payload
-        frame = f"{len(body) + 4:04}" + body
+        frame = f"{len(body) + 4:04}" + body + "\x00"
         self._raw_string = frame
         return frame.encode("ascii")
 

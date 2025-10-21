@@ -39,7 +39,9 @@ class AsyncTcpClient(BaseTransport):
         )
         frame_length = int(length_bytes.decode("ascii"))
         remaining = await asyncio.wait_for(
-            self.reader.readexactly(frame_length - MidCodec.LENGTH_FIELD_SIZE),
+            self.reader.readexactly(
+                frame_length + MidCodec.FOOTER_FIELD_SIZE - MidCodec.LENGTH_FIELD_SIZE
+            ),
             timeout,
         )
         return length_bytes + remaining
