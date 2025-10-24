@@ -34,6 +34,9 @@ class AsyncTcpClient(BaseTransport):
 
     async def _read_frame(self, timeout: float) -> bytes:
         """Read one full Open Protocol frame."""
+        assert self.reader is not None
+        assert self.writer is not None
+
         length_bytes = await asyncio.wait_for(
             self.reader.readexactly(MidCodec.LENGTH_FIELD_SIZE), timeout
         )
@@ -52,6 +55,7 @@ class AsyncTcpClient(BaseTransport):
         return await self.receive(timeout)
 
     async def send(self, data: bytes):
+        assert self.writer is not None
         """Send a frame without waiting for a response."""
         self._ensure_connected()
         self.writer.write(data)
