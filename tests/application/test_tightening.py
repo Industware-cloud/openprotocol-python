@@ -36,7 +36,7 @@ class TighteningDevice(OpenProtocolEvent):
 
     @classmethod
     def from_message(cls, msg: OpenProtocolRawMessage) -> "OpenProtocolMessage":
-        pass
+        raise NotImplementedError()
 
 
 def test_tightening_rev1_decode():

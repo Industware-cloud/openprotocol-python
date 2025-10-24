@@ -59,7 +59,7 @@ class TighteningDevice(OpenProtocolEvent):
 
     @classmethod
     def from_message(cls, msg: OpenProtocolRawMessage) -> "OpenProtocolMessage":
-        pass
+        raise NotImplementedError()
 
 
 register_messages(SelectParameterSetController, LastTighteningResultDataSubscribe)
