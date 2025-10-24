@@ -2,7 +2,7 @@ from openprotocol.application.parameter_set import SelectParameterSet
 from openprotocol.core.message import OpenProtocolRawMessage
 
 
-def test_pset_create():
+def test_pset_create() -> None:
     pset: SelectParameterSet = SelectParameterSet(1)
     result: OpenProtocolRawMessage = pset.encode()
     assert result is not None
