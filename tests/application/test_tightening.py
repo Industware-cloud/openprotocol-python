@@ -75,3 +75,23 @@ def test_tightening_decode():
     assert data.timestamp.startswith("2023-05-15")
     assert data.tool_serial_number == "42250888"
     assert data.torque_value_unit == LastTighteningResultData.TorqueValueUnit.NM
+
+
+def test_tightening_decode2():
+    raw_data = b"038500610021        010000020003STa 6000                 04                         0500000600307130800000090001100001110120130141151161171181191200000000000210013502200165023000000240012342500000260000027000002800000290000030000003100000320003300034000350000003600000037000000380000003900000040000000410000000675420000043000004442250888    \x01\x01452023-10-09:23:35:2346                   \x00"
+    raw_msg = OpenProtocolRawMessage.decode(raw_data)
+    assert raw_msg is not None
+    data: LastTighteningResultData = LastTighteningResultData.from_message(raw_msg)
+
+    assert raw_msg.revision == 2
+    assert data.pset_number == 3
+    assert data.tightening_status == 0
+    assert data.angle_status == 1
+    assert data.torque_status == 0
+    assert data.torque == 12.34
+    assert data.angle == 0
+    assert data.torque_controller_name == "STa 6000"
+    assert data.pset_name == ""
+    assert data.timestamp.startswith("2023-10-09")
+    assert data.tool_serial_number == "42250888"
+    assert data.torque_value_unit == LastTighteningResultData.TorqueValueUnit.NM

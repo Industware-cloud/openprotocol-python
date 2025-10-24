@@ -1,4 +1,5 @@
 import logging
+import string
 from enum import Enum, verify, UNIQUE
 
 from openprotocol.application.base_messages import (
@@ -7,6 +8,7 @@ from openprotocol.application.base_messages import (
     OpenProtocolEventACK,
     OpenProtocolEventUnsubscribe,
 )
+from openprotocol.application.parser import FieldSpec, parse_message
 from openprotocol.core.message import OpenProtocolRawMessage
 from openprotocol.core.mid_base import OpenProtocolMessage
 
@@ -87,49 +89,58 @@ class LastTighteningResultData(OpenProtocolEvent):
         return msg_obj
 
     def _rev_common(self, msg: OpenProtocolRawMessage):
-        if msg[20:22] != "01":
-            raise RuntimeError(f"Byte 21-22 is not 01 {msg[20:22]}")
-        self.cell_id = int(msg[22:26])  # 23-26
+        fields_common = [
+            FieldSpec("cell_id", 20, 22, parser=int),
+            FieldSpec("channel_id", 26, 28, parser=int),
+            FieldSpec("torque_controller_name", 32, 57, parser=lambda s: s.strip()),
+        ]
 
-        if msg[26:28] != "02":
-            raise RuntimeError(f"Byte 27-28 is not 02 {msg[26:28]}")
-        self.channel_id = int(msg[28:30])  # 29-30
-
-        self.torque_controller_name = msg[32:57].strip()  # 33-57
+        parse_message(msg, self, fields_common)
 
     def _rev1(self, msg: OpenProtocolRawMessage):
+        fields_v1 = [
+            FieldSpec("pset_number", 90, 93, parser=int),
+            FieldSpec(None, 105, 107, parser=str, validator=lambda x: x == "09"),
+            FieldSpec("tightening_status", 107, 108, parser=int),
+            FieldSpec(None, 108, 110, parser=str, validator=lambda x: x == "10"),
+            FieldSpec("torque_status", 110, 111, parser=int),
+            FieldSpec("angle_status", 113, 114, parser=int),
+            FieldSpec("torque", 140, 146, parser=lambda s: float(s) / 100.0),
+            FieldSpec("timestamp", 176, 195, parser=lambda s: s.strip()),
+        ]
+
         self._rev_common(msg)
-        self.pset_number = int(msg[90:93])  # 91-93
-        if msg[105:107] != "09":
-            raise RuntimeError(f"Byte 106-107 is not 09 {msg[105:107]}")
-        self.tightening_status = int(msg[107:108])  ## 108
-        if msg[108:110] != "10":  # 109-110
-            raise RuntimeError(f"Byte 109-110 is not 10 {msg[108:110]}")
-        self.torque_status = int(msg[110:111])  # 111 (0=Low,1=OK,2=High)
-        self.angle_status = int(msg[113:114])  # 114 (0=Low,1=OK,2=High)
-        self.torque = float(msg[140:146]) / 100.0  # 141-146
-        self.timestamp = msg[176:195]
+        parse_message(msg, self, fields_v1)
 
     def _rev2(self, msg: OpenProtocolRawMessage):
+        fields_v2 = [
+            FieldSpec("pset_number", 92, 95, parser=int),
+            FieldSpec(None, 118, 120, parser=str, validator=lambda x: x == "11"),
+            FieldSpec("tightening_status", 120, 121, parser=int),
+            FieldSpec(None, 124, 126, parser=str, validator=lambda x: x == "13"),
+            FieldSpec("torque_status", 126, 127, parser=int),
+            FieldSpec("angle_status", 129, 130, parser=int),
+            FieldSpec("torque", 183, 189, parser=lambda s: float(s) / 100.0),
+            FieldSpec("angle", 212, 217, parser=int),
+            FieldSpec(
+                "tool_serial_number",
+                329,
+                343,
+                parser=lambda s: "".join(c for c in s if c in string.printable).strip(),
+            ),
+            FieldSpec("timestamp", 345, 364, parser=lambda s: s.strip()),
+            FieldSpec(None, 385, 387, parser=str, validator=lambda x: x == "47"),
+            FieldSpec("pset_name", 387, 412, parser=lambda s: s.strip()),
+            FieldSpec(
+                "torque_value_unit",
+                414,
+                415,
+                parser=lambda s: LastTighteningResultData.TorqueValueUnit(int(s)),
+            ),
+        ]
+
         self._rev_common(msg)
-        self.pset_number = int(msg[92:95])  # 93-95
-        if msg[118:120] != "11":
-            raise RuntimeError(f"Byte 119-120 is not 11 {msg[118:120]}")
-        self.tightening_status = int(msg[120:121])  ## 121
-        if msg[124:126] != "13":  # 125-126
-            raise RuntimeError(f"Byte 125-126 is not 13 {msg[124:126]}")
-        self.torque_status = int(msg[126:127])  # 127 (0=Low,1=OK,2=High)
-        self.angle_status = int(msg[129:130])  # 130 (0=Low,1=OK,2=High)
-        self.torque = float(msg[183:189]) / 100.0  # 184-189
-        self.angle = int(msg[212:217])  # 213 - 217
-        self.tool_serial_number = msg[329:343].strip()  # 330 - 343
-        self.timestamp = msg[345:364]  # 346-364
-        if msg[385:387] != "47":
-            raise RuntimeError(f"Byte 386-387 is not 47 {msg[385:387]}")
-        self.pset_name = msg[387:412].strip()  # 388 - 412
-        self.torque_value_unit = LastTighteningResultData.TorqueValueUnit(
-            int(msg[414:415])
-        )  # 415
+        parse_message(msg, self, fields_v2)
 
     def encode(self) -> OpenProtocolRawMessage:
         raise NotImplementedError("Not implemented")
