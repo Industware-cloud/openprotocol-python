@@ -184,9 +184,10 @@ class OpenProtocolClient:
                     continue
 
                 logger.warning(f"Not expected message: {mid_obj.MID}")
-                self._pending_future.set_exception(
-                    ValueError(f"Not expected response message {mid_obj.MID}")
-                )
+                if self._pending_future:
+                    self._pending_future.set_exception(
+                        ValueError(f"Not expected response message {mid_obj.MID}")
+                    )
             except asyncio.CancelledError:
                 logger.info("Cancelled loop")
                 break
