@@ -62,7 +62,7 @@ class OpenProtocolEventSubscribe(OpenProtocolMessage, ABC):
         CommunicationPositiveAck.MID,
     }
     # Mid of event to be subscribed
-    MID_EVENT = None
+    MID_EVENT: int | None = None
 
     def __init__(self, revision: int = 1) -> None:
         """
@@ -83,7 +83,7 @@ class OpenProtocolEventUnsubscribe(OpenProtocolMessage, ABC):
         CommunicationPositiveAck.MID,
     }
     # Mid of event to be unsubscribed
-    MID_EVENT = None
+    MID_EVENT: int | None = None
     REVISION = 1
 
     def __init__(self):
