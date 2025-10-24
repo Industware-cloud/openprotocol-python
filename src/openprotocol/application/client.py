@@ -109,7 +109,7 @@ class OpenProtocolClient:
                 f"Message type is not for event subscribe: {mid_cls.MESSAGE_TYPE}"
             )
         mid_obj = mid_cls()
-        if not mid_obj.MID_EVENT:
+        if not mid_cls.MID_EVENT:
             raise RuntimeError(f"MID event not set for MID: {mid_cls.MID}")
         response = await self.send_receive(mid_obj)
 
