@@ -41,7 +41,7 @@ class DummyMessageNoResp(OpenProtocolMessage):
     MID = 9997
     REVISION = 1
     MESSAGE_TYPE = MessageType.REQ_MESSAGE
-    expected_response_mids = frozenset([])
+    expected_response_mids = set([])
 
     def __init__(self, payload="hello"):
         super().__init__(self.REVISION)
@@ -59,7 +59,7 @@ class DummyMessageSend(OpenProtocolMessage):
     MID = 9998
     REVISION = 1
     MESSAGE_TYPE = MessageType.REQ_MESSAGE
-    expected_response_mids = frozenset({DummyMessageRecv.MID})
+    expected_response_mids = {DummyMessageRecv.MID}
 
     def __init__(self, payload="hello"):
         super().__init__(self.REVISION)
@@ -77,7 +77,7 @@ class DummyMessageSendRes(OpenProtocolMessage):
     MID = 9998
     REVISION = 1
     MESSAGE_TYPE = MessageType.REQ_MESSAGE
-    expected_response_mids = frozenset({1234})
+    expected_response_mids = {1234}
 
     def __init__(self, payload="hello"):
         super().__init__(self.REVISION)

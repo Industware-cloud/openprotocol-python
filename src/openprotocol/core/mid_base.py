@@ -21,7 +21,7 @@ class OpenProtocolMessage(ABC):
 
     MID: int | None = None
     REVISION: int | None = None
-    expected_response_mids: ClassVar[frozenset[int]] = frozenset()
+    expected_response_mids: ClassVar[set[int]] = set()
     MESSAGE_TYPE: MessageType | None = None
 
     def __init__(self, revision: int) -> None:
