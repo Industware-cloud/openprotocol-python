@@ -134,8 +134,12 @@ class OpenProtocolRawMessage:
         if not isinstance(value, str):
             raise TypeError("Assigned value must be a string")
 
+        if self._raw_string is None:
+            return
+
         # auto-expand with spaces if needed
         def ensure_length(target_len: int):
+            assert self._raw_string is not None
             if len(self._raw_string) < target_len:
                 self._raw_string += " " * (target_len - len(self._raw_string))
 
