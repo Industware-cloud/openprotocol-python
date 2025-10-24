@@ -110,9 +110,21 @@ class OpenProtocolRawMessage:
         if self._raw_string is None:
             return ""
 
+        length = len(self._raw_string)
+
         if isinstance(key, slice):
+            start = key.start or 0
+            stop = key.stop if key.stop is not None else len(self._raw_string)
+            if start < 0 or stop > length:
+                raise IndexError(
+                    f"Slice {start}:{stop} out of range for message length {length}."
+                )
             return self._raw_string[key]
         elif isinstance(key, int):
+            if key < 0 or key >= length:
+                raise IndexError(
+                    f"Index {key} out of range for message length {length}."
+                )
             return self._raw_string[key]
         else:
             raise TypeError("Invalid argument type. Must be int or slice.")
