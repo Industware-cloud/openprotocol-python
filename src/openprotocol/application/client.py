@@ -32,7 +32,9 @@ class OpenProtocolClient:
 
         # Subscriptions
         self._subscribed_mids: Set[int] = set()
-        self._subscription_queue: asyncio.Queue[OpenProtocolMessage] = asyncio.Queue()
+        self._subscription_queue: asyncio.Queue[OpenProtocolMessage | None] = (
+            asyncio.Queue()
+        )
 
         # Pending request-response
         self._pending_future: Optional[asyncio.Future] = None
@@ -127,7 +129,10 @@ class OpenProtocolClient:
 
     async def get_subscription(self) -> OpenProtocolMessage:
         """Wait for the next async event MID from a subscription."""
-        return await self._subscription_queue.get()
+        res = await self._subscription_queue.get()
+        if not res:
+            raise ConnectionError(f"Connection closed")
+        return res
 
     async def send_receive(
         self, mid_obj: OpenProtocolMessage, timeout: float = 5.0
@@ -188,12 +193,25 @@ class OpenProtocolClient:
                     self._pending_future.set_exception(
                         ValueError(f"Not expected response message {mid_obj.MID}")
                     )
+                    self._pending_future.set_result(None)
             except asyncio.CancelledError:
                 logger.info("Cancelled loop")
                 break
             except ValueError as e:
                 logger.warning(f"Invalid message: {e}")
                 continue
+            except asyncio.IncompleteReadError as e:
+                # Connection closed by remote
+                logger.warning(f"Incomplete read error: {e}")
+                break
             except Exception as e:
                 logger.error(f"Unexpected exception: {e}")
                 await asyncio.sleep(1)
+
+        self._running = False
+        if self._pending_future and not self._pending_future.done():
+            self._pending_future.set_exception(
+                ConnectionError("Connection closed while waiting for response")
+            )
+            self._pending_future.set_result(None)
+        self._subscription_queue.put_nowait(None)
