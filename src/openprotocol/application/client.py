@@ -200,6 +200,12 @@ class OpenProtocolClient:
             except ValueError as e:
                 logger.warning(f"Invalid message: {e}")
                 continue
+            except asyncio.TimeoutError:
+                logger.info("Timeout")
+                continue
+            except ConnectionError as e:
+                logger.warning(f"Connection error: {e}")
+                break
             except asyncio.IncompleteReadError as e:
                 # Connection closed by remote
                 logger.warning(f"Incomplete read error: {e}")
